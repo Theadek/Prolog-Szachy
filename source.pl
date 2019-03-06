@@ -27,24 +27,31 @@ ch2num(d, 4).
 ch2num(e, 5).
 ch2num(f, 6).
 
+y_pawn_movement(w, 1).
+y_pawn_movement(b, -1).
+
 % biały pion do przodu X, Y -> indeksy
-possible_move(B, X, Y, 0, 1) :- get_chessman(B, X, Y, [Ch, Co|_]), 
-                                Ch = p, Co = w,
-                                TX is X, TY is Y + 1,
-                                get_chessman(B, TX, TY, E), 
+possible_move(B, X, Y, XT, YT) :- get_chessman(B, X, Y, [Ch, Co|_]), 
+                                Ch = p,
+                                y_pawn_movement(Co, M),
+                                XT is X, YT is Y + M,
+                                get_chessman(B, XT, YT, E), 
                                 E = e.
 % biały pion do przodu, w prawo X, Y -> indeksy
-possible_move(B, X, Y, 1, 1) :- get_chessman(B, X, Y, [Ch, Co|_]), 
-                                Ch = p, Co = w,
-                                TX is X + 1, TY is Y + 1,
-                                get_chessman(B, TX, TY, [_, ECo|_]), 
+possible_move(B, X, Y, XT, YT) :- get_chessman(B, X, Y, [Ch, Co|_]), 
+                                Ch = p,
+                                y_pawn_movement(Co, M),
+                                XT is X + 1, YT is Y + M,
+                                get_chessman(B, XT, YT, [_, ECo|_]), 
                                 ECo = b.
 % biały pion do przodu, w lewo X, Y -> indeksy
-possible_move(B, X, Y, -1, 1) :- get_chessman(B, X, Y, [Ch, Co|_]), 
-                                Ch = p, Co = w,
-                                TX is X - 1, TY is Y + 1,
-                                get_chessman(B, TX, TY, [_, ECo|_]), 
+possible_move(B, X, Y, XT, YT) :- get_chessman(B, X, Y, [Ch, Co|_]), 
+                                Ch = p,
+                                y_pawn_movement(Co, M),
+                                XT is X - 1, YT is Y + M,
+                                get_chessman(B, XT, YT, [_, ECo|_]), 
                                 ECo = b.
+
 % inne figury
 possible_move(B, X, Y, XT, YT) :- get_chessman(B, X, Y, [Ch, _|_]),
                                   move(Ch, Xm, Ym),
@@ -61,6 +68,7 @@ kek(B, X, Y, XT, YT) :- possible_move(B, X, Y, X1, Y1),
                         X2 is X1 + 1,
                         ch2num(XT, X2), YT is Y1 + 1.
 
+% damka/królowa
 move(q, 0, Y) :- range(-7, 7, O), member(Y, O).
 move(q, X, 0) :- range(-7, 7, O), member(X, O).
 move(q, X, Y) :- range(-7, 7, O), 
@@ -69,7 +77,29 @@ move(q, X, Y) :- range(-7, 7, O),
                  Xa is abs(X),
                  Ya is abs(Y),
                  Xa = Ya.
+% król
+move(k, 0, 1).
+move(k, 1, 1).
+move(k, 1, 0).
+move(k, 1, -1).
+move(k, 0, -1).
+move(k, -1, -1).
+move(k, -1, 0).
+move(k, -1, 1).
 
+% wieża
+move(r, 0, Y) :- range(-7, 7, O), member(Y, O).
+move(r, X, 0) :- range(-7, 7, O), member(X, O).
+
+% goniec
+move(b, X, Y) :- range(-7, 7, O), 
+                 member(X, O),
+                 member(Y, O),
+                 Xa is abs(X),
+                 Ya is abs(Y),
+                 Xa = Ya.
+
+% skoczek
 move(n, -1, 2).
 move(n, 1, 2).
 move(n, 2, 1).
@@ -79,6 +109,7 @@ move(n, -1, -2).
 move(n, -2, -1).
 move(n, -2, 1).
 
+% neguje kolor
 negCol(b, w).
 negCol(w, b).
 
