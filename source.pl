@@ -60,14 +60,16 @@ possible_move(B, X, Y, XT, YT) :-
     get_chessman(B, X, Y, [Ch, _|_]),
     move(Ch, Xm, Ym),
     XT is X + Xm, YT is Y + Ym,
-    get_chessman(B, XT, YT, e).
+    get_chessman(B, XT, YT, e),
+    is_empty_between(B, X, Y, XT, YT).
 possible_move(B, X, Y, XT, YT) :-
     get_chessman(B, X, Y, [Ch, Co|_]),
     move(Ch, Xm, Ym),
     XT is X + Xm, YT is Y + Ym,
     negCol(Co, NCo),
     get_chessman(B, XT, YT, [_, ECo|_]),
-    ECo = NCo.
+    ECo = NCo,
+    is_empty_between(B, X, Y, XT, YT).
 
 kek(B, X, Y, XT, YT) :-
     possible_move(B, X, Y, X1, Y1),
@@ -117,14 +119,68 @@ move(n, -1, -2).
 move(n, -2, -1).
 move(n, -2, 1).
 
+is_empty_between(_, X1, Y1, X2, Y2) :-
+    Xdiff is X1 - X2, Ydiff is Y1 - Y2,
+    move(k, Xdiff, Ydiff).
+is_empty_between(B, X1, Y1, X2, Y2) :-
+    fields_between(X1, Y1, X2, Y2, XO, YO),
+    get_chessman(B, XO, YO, e).
+
+fields_between(X1, Y1, X2, Y2, X1, YO) :-
+    Diff is X1 - X2,
+    Diff = 0,
+    range_ex(Y1, Y2, YList),
+    member(YO, YList), !.
+fields_between(X1, Y1, X2, Y2, XO, Y1) :-
+    Diff is Y1 - Y2,
+    Diff = 0,
+    range_ex(X1, X2, XList),
+    member(XO, XList), !.
+fields_between(X1, Y1, X2, Y2, XO, YO) :-
+    Xdiff is X1 - X2, Ydiff is Y1 - Y2,
+    Xa is abs(Xdiff), Ya is abs(Ydiff),
+    Xa = Ya, Xa > 1, Ya > 1,
+    range_ex(X1, X2, XList),
+    range_ex(Y1, Y2, YList),
+    zip(XList, YList, Zipped),
+    member([XO, YO], Zipped), !.
+
 % neguje kolor
 negCol(b, w).
 negCol(w, b).
 
-range(Low, High, []) :- Low > High, !.
-range(Low, High, [Low | Rest]) :-
+zip([], [], []).
+zip([X|Xs], [Y|Ys], [[X,Y]|Zs]) :- zip(Xs,Ys,Zs).
+
+% generatory
+% range_exclusive
+range_ex(First, Last, Out) :-
+    Diff is First - Last,
+    abs(Diff) > 1,
+    First < Last,
+    F1 is First + 1, L1 is Last - 1,
+    range(F1, L1, Out).
+range_ex(First, Last, Out) :-
+    Diff is First - Last,
+    abs(Diff) > 1,
+    First > Last,
+    F1 is First - 1, L1 is Last + 1,
+    range(F1, L1, Out).
+
+range(First, Last, Out) :-
+    First =< Last, range_asc(First, Last, Out).
+range(First, Last, Out) :-
+    First > Last, range_desc(First, Last, Out).
+
+range_asc(Low, High, []) :- Low > High, !.
+range_asc(Low, High, [Low | Rest]) :-
     Low1 is Low + 1,
-    range(Low1, High, Rest).
+    range_asc(Low1, High, Rest).
+
+range_desc(Low, High, []) :- Low < High, !.
+range_desc(Low, High, [Low | Rest]) :-
+    Low1 is Low - 1,
+    range_desc(Low1, High, Rest).
 
 % sprawdzanie, czy pozycje znajdują się na planszy
 pos(X1, Y1, X2, Y2) :-
@@ -132,6 +188,3 @@ pos(X1, Y1, X2, Y2) :-
     Y2 =< 6, Y2 >= 1,
     ch2num(X1, _), ch2num(X2, _).
 
-% TODO:
-% zdefiniować ruchy figur,
-% 
