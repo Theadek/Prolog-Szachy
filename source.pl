@@ -45,7 +45,47 @@ possible_move(B, X, Y, -1, 1) :- get_chessman(B, X, Y, [Ch, Co|_]),
                                 TX is X - 1, TY is Y + 1,
                                 get_chessman(B, TX, TY, [_, ECo|_]), 
                                 ECo = b.
+% inne figury
+possible_move(B, X, Y, XT, YT) :- get_chessman(B, X, Y, [Ch, _|_]),
+                                  move(Ch, Xm, Ym),
+                                  XT is X + Xm, YT is Y + Ym,
+                                  get_chessman(B, XT, YT, e).
+possible_move(B, X, Y, XT, YT) :- get_chessman(B, X, Y, [Ch, Co|_]),
+                                  move(Ch, Xm, Ym),
+                                  XT is X + Xm, YT is Y + Ym,
+                                  negCol(Co, NCo),
+                                  get_chessman(B, XT, YT, [_, ECo|_]),
+                                  ECo = NCo.
 
+kek(B, X, Y, XT, YT) :- possible_move(B, X, Y, X1, Y1), 
+                        X2 is X1 + 1,
+                        ch2num(XT, X2), YT is Y1 + 1.
+
+move(q, 0, Y) :- range(-7, 7, O), member(Y, O).
+move(q, X, 0) :- range(-7, 7, O), member(X, O).
+move(q, X, Y) :- range(-7, 7, O), 
+                 member(X, O),
+                 member(Y, O),
+                 Xa is abs(X),
+                 Ya is abs(Y),
+                 Xa = Ya.
+
+move(n, -1, 2).
+move(n, 1, 2).
+move(n, 2, 1).
+move(n, 2, -1).
+move(n, 1, -2).
+move(n, -1, -2).
+move(n, -2, -1).
+move(n, -2, 1).
+
+negCol(b, w).
+negCol(w, b).
+
+range(Low, High, []) :- Low > High, !.
+range(Low, High, [Low | Rest]) :-
+    Low1 is Low + 1,
+    range(Low1, High, Rest).
 
 % sprawdzanie, czy pozycje znajdują się na planszy
 pos(X1, Y1, X2, Y2) :- Y1 =< 6, Y1 >= 1,
