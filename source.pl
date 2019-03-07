@@ -21,12 +21,19 @@ get_chessman(B, X, Y, Chessman) :-
     nth0(Y, Column, Chessman).
 
 % zmiana litery na cyfrę
-ch2num(a, 1).
-ch2num(b, 2).
-ch2num(c, 3).
-ch2num(d, 4).
-ch2num(e, 5).
-ch2num(f, 6).
+ch2idx(a, 0).
+ch2idx(b, 1).
+ch2idx(c, 2).
+ch2idx(d, 3).
+ch2idx(e, 4).
+ch2idx(f, 5).
+
+num2idx(1, 0).
+num2idx(2, 1).
+num2idx(3, 2).
+num2idx(4, 3).
+num2idx(5, 4).
+num2idx(6, 5).
 
 y_pawn_movement(w, 1).
 y_pawn_movement(b, -1).
@@ -88,20 +95,25 @@ possible_move(B, X, Y, XT, YT) :-
     ECo = NCo,
     is_empty_between(B, X, Y, XT, YT).
 
-kek(B, X, Y, XT, YT) :-
-    ch2num(X, Xn),
-    XI is Xn - 1, YI is Y - 1,
-    possible_move(B, XI, YI, X1, Y1),
-    X2 is X1 + 1,
-    ch2num(XT, X2), YT is Y1 + 1,
-    get_chessman(B, XI, YI, [_, Color|_]),
-    do_move(B, XI, YI, X1, Y1, BNew),
+kek(B, X1, Y1, X2, Y2) :-
+    possible_move(B, X1, Y1, X2, Y2),
+    get_chessman(B, X1, Y1, [_, Color|_]),
+    do_move(B, X1, Y1, X2, Y2, BNew),
     \+king_checked(BNew, Color).
 
 % Metody do zaimplementowania:
 pos(X1, Y1, X2, Y2) :-
     example(B),
-    kek(B, X1, Y1, X2, Y2).
+    ch2idx(X1, Xi1), ch2idx(X2, Xi2),
+    num2idx(Y1, Yi1), num2idx(Y2, Yi2),
+    kek(B, Xi1, Yi1, Xi2, Yi2).
+
+wszystkie_pos_bialych(X1, Y1, X2, Y2) :-
+    example(B),
+    ch2idx(X1, Xi1), ch2idx(X2, Xi2),
+    num2idx(Y1, Yi1), num2idx(Y2, Yi2),
+    get_chessman(B, Xi1, Yi1, [_, w|_]),
+    kek(B, Xi1, Yi1, Xi2, Yi2).
 
 % sprawdza czy król jest szachowany
 king_checked(B, Color) :-
