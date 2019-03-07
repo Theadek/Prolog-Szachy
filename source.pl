@@ -16,8 +16,9 @@ example([[e, [n, w], e, e, [b, b], e],
          [e, [p, w], [n, w], e, e, e]]).
 
 % zrwaca figurę, B - plansza
-get_chessman(B, X, Y, C) :- nth0(X, B, L), 
-                            nth0(Y, L, C).
+get_chessman(B, X, Y, Chessman) :-
+    nth0(X, B, Column), 
+    nth0(Y, Column, Chessman).
 
 % zmiana litery na cyfrę
 ch2num(a, 1).
@@ -181,6 +182,23 @@ fields_between(X1, Y1, X2, Y2, Zipped) :-
     range_ex(Y1, Y2, YList),
     zip(XList, YList, Zipped).
 
+% zwraca planszę po przeniesieniu ruchu
+do_move(B, X1, Y1, X2, Y2, Bout):-
+    get_chessman(B, X1, Y1, C),
+    nth0(X1, B, ColFrom),
+    replace(Y1, e, ColFrom, ColFromNew),
+    replace(X1, ColFromNew, B, Bnew),
+    nth0(X2, Bnew, ColTo),
+    replace(Y2, C, ColTo, ColToNew),
+    replace(X2, ColToNew, Bnew, Bout).
+
+% podmienia element na danym Index na Elem
+replace(Index, Elem, [_|T], [Elem|T]) :-
+    Index = 0, !. 
+replace(Index, Elem, [H|T], [H|Out]) :-
+    Index1 is Index - 1,
+    replace(Index1, Elem, T, Out).  
+
 % neguje kolor
 neg_col(b, w).
 neg_col(w, b).
@@ -223,4 +241,5 @@ range_desc(Low, High, []) :- Low < High, !.
 range_desc(Low, High, [Low | Rest]) :-
     Low1 is Low - 1,
     range_desc(Low1, High, Rest).
+
 
