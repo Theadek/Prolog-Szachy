@@ -45,16 +45,16 @@ possible_move(B, X, Y, XT, YT) :-
     Ch = p,
     y_pawn_movement(Co, M),
     XT is X + 1, YT is Y + M,
-    get_chessman(B, XT, YT, [_, ECo|_]),
-    ECo = b.
+    neg_col(Co, ECo),
+    get_chessman(B, XT, YT, [_, ECo|_]).
 % pion do przodu, w lewo X, Y -> indeksy
 possible_move(B, X, Y, XT, YT) :-
     get_chessman(B, X, Y, [Ch, Co|_]),
     Ch = p,
     y_pawn_movement(Co, M),
     XT is X - 1, YT is Y + M,
-    get_chessman(B, XT, YT, [_, ECo|_]),
-    ECo = b.
+    neg_col(Co, ECo),
+    get_chessman(B, XT, YT, [_, ECo|_]).
 
 % skoczek/konik
 possible_move(B, X, Y, XT, YT) :-
@@ -93,16 +93,30 @@ kek(B, X, Y, XT, YT) :-
     XI is Xn - 1, YI is Y - 1,
     possible_move(B, XI, YI, X1, Y1),
     X2 is X1 + 1,
-    ch2num(XT, X2), YT is Y1 + 1.
+    ch2num(XT, X2), YT is Y1 + 1,
+    get_chessman(B, XI, YI, [_, Color|_]),
+    do_move(B, XI, YI, X1, Y1, BNew),
+    \+king_checked(BNew, Color).
 
 % Metody do zaimplementowania:
 pos(X1, Y1, X2, Y2) :-
     example(B),
     kek(B, X1, Y1, X2, Y2).
 
+% sprawdza czy król jest szachowany
+king_checked(B, Color) :-
+    get_king_pos(B, Color, Xk, Yk),
+    neg_col(Color, EnemyColor),
+    covered_field(B, Xk, Yk, EnemyColor).
+
+% zwraca pozycję króla
 get_king_pos(B, Color, X, Y) :-
     get_chessman(B, X, Y, [k, Color|_]).
-    
+
+% sprawdza czy pole jest rażone przez figury danego koloru
+covered_field(B, X, Y, Color) :-
+    get_chessman(B, Xa, Ya, [_, Color|_]),
+    possible_move(B, Xa, Ya, X, Y).     
     
 % damka/królowa
 move(q, 0, Y) :- range(-7, 7, O), member(Y, O).
@@ -241,5 +255,3 @@ range_desc(Low, High, []) :- Low < High, !.
 range_desc(Low, High, [Low | Rest]) :-
     Low1 is Low - 1,
     range_desc(Low1, High, Rest).
-
-
