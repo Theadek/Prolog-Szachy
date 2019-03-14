@@ -1,10 +1,3 @@
-board(_,[],_).
-board([],_,_).
-board([A],[B],L) :- L = [[A,B]].
-board([A],[B|D],L) :- append([[A,B]],L1,L),board([A],D,L1).
-board([A|C],[B|D],L) :- board([A],[B|D],L1),board(C,[B|D],L2),append(L1,L2,L).
-
-
 % przyjmujemy że oś X szachownicy to litery, a Y to cyfry 
 
 % zwraca przykładową planszę z zadania
@@ -21,12 +14,19 @@ get_chessman(B, X, Y, Chessman) :-
     nth0(Y, Column, Chessman).
 
 % zmiana litery na cyfrę
-ch2num(a, 1).
-ch2num(b, 2).
-ch2num(c, 3).
-ch2num(d, 4).
-ch2num(e, 5).
-ch2num(f, 6).
+ch2idx(a, 0).
+ch2idx(b, 1).
+ch2idx(c, 2).
+ch2idx(d, 3).
+ch2idx(e, 4).
+ch2idx(f, 5).
+
+num2idx(1, 0).
+num2idx(2, 1).
+num2idx(3, 2).
+num2idx(4, 3).
+num2idx(5, 4).
+num2idx(6, 5).
 
 y_pawn_movement(w, 1).
 y_pawn_movement(b, -1).
@@ -45,16 +45,16 @@ possible_move(B, X, Y, XT, YT) :-
     Ch = p,
     y_pawn_movement(Co, M),
     XT is X + 1, YT is Y + M,
-    get_chessman(B, XT, YT, [_, ECo|_]),
-    ECo = b.
+    neg_col(Co, ECo),
+    get_chessman(B, XT, YT, [_, ECo|_]).
 % pion do przodu, w lewo X, Y -> indeksy
 possible_move(B, X, Y, XT, YT) :-
     get_chessman(B, X, Y, [Ch, Co|_]),
     Ch = p,
     y_pawn_movement(Co, M),
     XT is X - 1, YT is Y + M,
-    get_chessman(B, XT, YT, [_, ECo|_]),
-    ECo = b.
+    neg_col(Co, ECo),
+    get_chessman(B, XT, YT, [_, ECo|_]).
 
 % skoczek/konik
 possible_move(B, X, Y, XT, YT) :-
@@ -88,20 +88,40 @@ possible_move(B, X, Y, XT, YT) :-
     ECo = NCo,
     is_empty_between(B, X, Y, XT, YT).
 
-kek(B, X, Y, XT, YT) :-
-    ch2num(X, Xn),
-    XI is Xn - 1, YI is Y - 1,
-    possible_move(B, XI, YI, X1, Y1),
-    X2 is X1 + 1,
-    ch2num(XT, X2), YT is Y1 + 1.
+kek(B, X1, Y1, X2, Y2) :-
+    possible_move(B, X1, Y1, X2, Y2),
+    get_chessman(B, X1, Y1, [_, Color|_]),
+    do_move(B, X1, Y1, X2, Y2, BNew),
+    \+king_checked(BNew, Color).
 
 % Metody do zaimplementowania:
 pos(X1, Y1, X2, Y2) :-
     example(B),
-    kek(B, X1, Y1, X2, Y2).
+    ch2idx(X1, Xi1), ch2idx(X2, Xi2),
+    num2idx(Y1, Yi1), num2idx(Y2, Yi2),
+    kek(B, Xi1, Yi1, Xi2, Yi2).
 
+wszystkie_pos_bialych(X1, Y1, X2, Y2) :-
+    example(B),
+    ch2idx(X1, Xi1), ch2idx(X2, Xi2),
+    num2idx(Y1, Yi1), num2idx(Y2, Yi2),
+    get_chessman(B, Xi1, Yi1, [_, w|_]),
+    kek(B, Xi1, Yi1, Xi2, Yi2).
+
+% sprawdza czy król jest szachowany
+king_checked(B, Color) :-
+    get_king_pos(B, Color, Xk, Yk),
+    neg_col(Color, EnemyColor),
+    covered_field(B, Xk, Yk, EnemyColor).
+
+% zwraca pozycję króla
 get_king_pos(B, Color, X, Y) :-
     get_chessman(B, X, Y, [k, Color|_]).
+
+% sprawdza czy pole jest rażone przez figury danego koloru
+covered_field(B, X, Y, Color) :-
+    get_chessman(B, Xa, Ya, [_, Color|_]),
+    possible_move(B, Xa, Ya, X, Y).     
     
 % damka/królowa
 move(q, 0, Y) :- range(-7, 7, O), member(Y, O).
@@ -243,5 +263,3 @@ range_desc(Low, High, []) :- Low < High, !.
 range_desc(Low, High, [Low | Rest]) :-
     Low1 is Low - 1,
     range_desc(Low1, High, Rest).
-
-
