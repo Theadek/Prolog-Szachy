@@ -103,7 +103,6 @@ pos(X1, Y1, X2, Y2) :-
 get_king_pos(B, Color, X, Y) :-
     get_chessman(B, X, Y, [k, Color|_]).
     
-    
 % damka/królowa
 move(q, 0, Y) :- range(-7, 7, O), member(Y, O).
 move(q, X, 0) :- range(-7, 7, O), member(X, O).
@@ -181,6 +180,9 @@ fields_between(X1, Y1, X2, Y2, Zipped) :-
     range_ex(X1, X2, XList),
     range_ex(Y1, Y2, YList),
     zip(XList, YList, Zipped).
+
+king_is_checked(B, Col) :-
+    get_king_pos(B, Col, X, Y).
 
 % zwraca planszę po przeniesieniu ruchu
 do_move(B, X1, Y1, X2, Y2, Bout):-
