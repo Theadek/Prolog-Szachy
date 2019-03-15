@@ -8,6 +8,13 @@ example([[e, [n, w], e, e, [b, b], e],
          [[k, w], [p, w], e, e, e, e],
          [e, [p, w], [n, w], e, e, e]]).
 
+example_two([[e, e, e, e, e, e],
+		 [[k, b], e, e, e, e, e],
+		 [[r, b], [r, b], e, e, e, e],
+		 [e, e, e, e, e, e],
+		 [e, [r, b], e, e, e, e],
+		 [e, e, e, e, e, [k, w]]]).
+
 % zrwaca figurę, B - plansza
 get_chessman(B, X, Y, Chessman) :-
     nth0(X, B, Column), 
@@ -88,25 +95,54 @@ possible_move(B, X, Y, XT, YT) :-
     ECo = NCo,
     is_empty_between(B, X, Y, XT, YT).
 
-kek(B, X1, Y1, X2, Y2) :-
+pos_B(B, X1, Y1, X2, Y2) :-
+	pos_B_col(B, _, X1, Y1, X2, Y2).
+
+pos_B_col(B, Col, X1, Y1, X2, Y2) :-
     possible_move(B, X1, Y1, X2, Y2),
-    get_chessman(B, X1, Y1, [_, Color|_]),
+    get_chessman(B, X1, Y1, [_, Col|_]),
     do_move(B, X1, Y1, X2, Y2, BNew),
-    \+king_checked(BNew, Color).
+    \+king_checked(BNew, Col).
 
 % Metody do zaimplementowania:
 pos(X1, Y1, X2, Y2) :-
     example(B),
     ch2idx(X1, Xi1), ch2idx(X2, Xi2),
     num2idx(Y1, Yi1), num2idx(Y2, Yi2),
-    kek(B, Xi1, Yi1, Xi2, Yi2).
+    pos_B(B, Xi1, Yi1, Xi2, Yi2).
 
 wszystkie_pos_bialych(X1, Y1, X2, Y2) :-
     example(B),
     ch2idx(X1, Xi1), ch2idx(X2, Xi2),
     num2idx(Y1, Yi1), num2idx(Y2, Yi2),
     get_chessman(B, Xi1, Yi1, [_, w|_]),
-    kek(B, Xi1, Yi1, Xi2, Yi2).
+    pos_B(B, Xi1, Yi1, Xi2, Yi2).
+
+is_mated(B, Col) :-
+	king_checked(B, Col),
+	\+pos_B_col(B, Col, _, _, _, _).
+
+checkmate_B(B, List, List, Col, N) :-
+	N > 0,
+	is_mated(B, Col), ! .
+checkmate_B(B, List, ListOut, Col, N) :-
+	N > 0,
+	pos_B_col(B, Col, X1, Y1, X2, Y2),
+	do_move(B, X1, Y1, X2, Y2, Bnew),
+	neg_col(Col, NCol),
+	N1 is N - 1,
+	ch2idx(XN1, X1),
+	num2idx(YN1, Y1),
+	ch2idx(XN2, X2),
+	num2idx(YN2, Y2),
+	append(List, [[XN1, YN1, XN2, YN2]], NList),
+	checkmate_B(Bnew, NList, ListOut, NCol, N1).
+
+checkmate(List, Col, N) :-
+	example_two(B),
+	N1 is N + 1,
+	checkmate_B(B, [], List, Col, N1).
+
 
 % sprawdza czy król jest szachowany
 king_checked(B, Color) :-
@@ -200,9 +236,6 @@ fields_between(X1, Y1, X2, Y2, Zipped) :-
     range_ex(X1, X2, XList),
     range_ex(Y1, Y2, YList),
     zip(XList, YList, Zipped).
-
-king_is_checked(B, Col) :-
-    get_king_pos(B, Col, X, Y).
 
 % zwraca planszę po przeniesieniu ruchu
 do_move(B, X1, Y1, X2, Y2, Bout):-
