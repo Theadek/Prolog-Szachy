@@ -8,7 +8,15 @@ example([[e, [n, w], e, e, [b, b], e],
          [[k, w], [p, w], e, e, e, e],
          [e, [p, w], [n, w], e, e, e]]).
 
-example_two([[e, e, e, e, e, e],
+example_two([[e, [n, w], e, e, [b, b], e],
+         [e, e, e, e, e, [r, b]],
+         [e, e, [q, w], e, e, e],
+         [e, e, [p, b], e, [p, b], [k, b]],
+         [[k, w], [p, w], [b, w], e, e, e],
+         [e, [p, w], [n, w], e, e, e]]).
+
+
+example_three([[e, e, e, e, e, e],
 		 [[k, b], e, e, e, e, e],
 		 [[r, b], [r, b], e, e, e, e],
 		 [e, e, e, e, e, e],
@@ -138,6 +146,7 @@ checkmate_B(B, List, ListOut, Col, N) :-
 	append(List, [[XN1, YN1, XN2, YN2]], NList),
 	checkmate_B(Bnew, NList, ListOut, NCol, N1).
 
+% na dodatkowe punkty
 checkmate(List, Col, N) :-
 	example_two(B),
 	N1 is N + 1,
